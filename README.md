@@ -17,8 +17,7 @@ If the answers match, you score!
 2. Share the room code with your friend.
 3. Both players receive the same prompt.
 4. Each player submits an answer.
-5. The answers are revealed.
-6. If both answers match, you score a point.
+5. Reveal the answer and see if if both answers match to get a point!
 
 ---
 
