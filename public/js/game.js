@@ -7,6 +7,7 @@ let totalRounds      = 6;
 let playerNames      = [];   // [player0Name, player1Name]
 let matchCount       = 0;    // how many rounds both players matched this game
 let selectedCategory = 'all'; // category id chosen in settings
+let roundHistory     = [];   // [{ round, prompt, answers, players, matched }]
 
 // ── Category definitions (must stay in sync with src/prompts.js CATEGORIES) ───
 const CATEGORIES = [
@@ -149,6 +150,7 @@ socket.on('game-start', ({ players, round, prompt, matchCount: mc, totalRounds: 
   playerNames  = players;
   totalRounds  = t;
   matchCount   = mc;
+  if (round === 1) roundHistory = [];
 
   // Switch the header to its compact form during active gameplay
   document.querySelector('header').classList.add('compact');
@@ -177,8 +179,9 @@ socket.on('game-start', ({ players, round, prompt, matchCount: mc, totalRounds: 
 });
 
 // both-answered fires when both players have submitted — time to reveal the answers
-socket.on('both-answered', ({ answers, matched, players, matchCount: mc, round, totalRounds: t }) => {
+socket.on('both-answered', ({ answers, matched, players, matchCount: mc, round, totalRounds: t, prompt }) => {
   matchCount = mc;
+  roundHistory.push({ round, prompt, answers: [...answers], players: [...players], matched });
 
   // Update the match counter
   document.getElementById('match-count-display').textContent = matchCount;
@@ -193,6 +196,16 @@ socket.on('both-answered', ({ answers, matched, players, matchCount: mc, round, 
   headingEl.classList.add(matched ? 'match' : 'no-match', 'pop');
 
   document.getElementById('results-round').textContent = `Round ${round} / ${t}`;
+
+  // Always show the prompt on the results screen
+  const resultPromptBox  = document.getElementById('result-prompt-box');
+  const resultPromptText = document.getElementById('result-prompt-text');
+  if (prompt) {
+    resultPromptText.textContent = prompt;
+    resultPromptBox.style.display = '';
+  } else {
+    resultPromptBox.style.display = 'none';
+  }
 
   // Build the two answer rows
   buildAnswerCompare(answers, players, matched);
@@ -245,6 +258,56 @@ socket.on('game-over', ({ matchCount: final, totalRounds: t }) => {
       <span class="final-match-den">${t}</span>
     </div>
     <p class="final-match-label">You matched ${final} out of ${t} round${t !== 1 ? 's' : ''}</p>`;
+
+  // Build the round-by-round summary
+  const scroll = document.getElementById('game-summary-scroll');
+  scroll.innerHTML = '';
+  roundHistory.forEach(entry => {
+    const row = document.createElement('div');
+    row.className = `summary-row ${entry.matched ? 'summary-match' : 'summary-no-match'}`;
+
+    const header = document.createElement('div');
+    header.className = 'summary-row-header';
+
+    const roundLbl = document.createElement('span');
+    roundLbl.className   = 'summary-round-label';
+    roundLbl.textContent = `Round ${entry.round}`;
+
+    const badge = document.createElement('span');
+    badge.className   = `summary-badge ${entry.matched ? 'match' : 'no-match'}`;
+    badge.textContent = entry.matched ? '✓ Match' : '✗ No Match';
+
+    header.appendChild(roundLbl);
+    header.appendChild(badge);
+
+    const promptEl = document.createElement('p');
+    promptEl.className   = 'summary-prompt';
+    promptEl.textContent = entry.prompt;
+
+    const answersEl = document.createElement('div');
+    answersEl.className = 'summary-answers';
+    entry.players.forEach((name, i) => {
+      const ansRow = document.createElement('div');
+      ansRow.className = 'summary-answer-row';
+
+      const nameLbl = document.createElement('span');
+      nameLbl.className   = 'summary-answer-name';
+      nameLbl.textContent = name;
+
+      const ansText = document.createElement('span');
+      ansText.className   = 'summary-answer-text';
+      ansText.textContent = `"${entry.answers[i]}"`;
+
+      ansRow.appendChild(nameLbl);
+      ansRow.appendChild(ansText);
+      answersEl.appendChild(ansRow);
+    });
+
+    row.appendChild(header);
+    row.appendChild(promptEl);
+    row.appendChild(answersEl);
+    scroll.appendChild(row);
+  });
 
   const playBtn = document.getElementById('play-again-btn');
   playBtn.disabled    = false;

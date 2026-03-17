@@ -190,6 +190,7 @@ function registerHandlers(io) {
           matchCount:  room.matchCount,
           round:       room.round,
           totalRounds: room.settings.totalRounds,
+          prompt:      room.currentPrompt,
         });
         console.log(`[room]       ${socket.data.roomCode} round ${room.round} — ${matched ? 'MATCH ✓' : 'no match ✗'}`);
       }
