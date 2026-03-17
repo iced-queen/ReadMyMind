@@ -17,7 +17,7 @@ const CATEGORIES = [
   { id: 'entertainment', label: 'Entertainment',   emoji: '🎬' },
   { id: 'sports',        label: 'Sports & Games',  emoji: '⚽' },
   { id: 'everyday',      label: 'Everyday Life',   emoji: '🏠' },
-  { id: 'popculture',    label: 'Pop Culture',     emoji: '🌟' },
+  { id: 'spicy',         label: 'Spicy',           emoji: '🌶️' },
   { id: 'random',        label: 'Random & Fun',    emoji: '✨' },
 ];
 
